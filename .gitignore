@@ -1,0 +1,7 @@
+.DS_Store
+*.pyc
+*.egg-info
+*.swp
+tags
+document_signer_for_pdf/docs/current
+node_modules/
