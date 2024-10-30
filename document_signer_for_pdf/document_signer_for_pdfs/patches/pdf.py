@@ -7,7 +7,7 @@ from pyhanko.sign.fields import SigFieldSpec, FieldMDPSpec, FieldMDPAction
 from pyhanko.sign.general import load_cert_from_pemder, load_private_key_from_pemder
 from pyhanko.pdf_utils.incremental_writer import IncrementalPdfFileWriter
 
-from frappe.utils.pdf import get_pdf, get_file_data_from_writer
+from frappe.utils import pdf
 
 def signed_get_pdf(html, options=None, output: PdfWriter | None = None):
 	html = scrub_urls(html)
@@ -37,7 +37,7 @@ def signed_get_pdf(html, options=None, output: PdfWriter | None = None):
 		else:
 			raise
 	finally:
-		cleanup(options)
+		pdf.cleanup(options)
 
 	if "password" in options:
 		password = options["password"]
@@ -52,7 +52,7 @@ def signed_get_pdf(html, options=None, output: PdfWriter | None = None):
 	if "password" in options:
 		writer.encrypt(password)
 
-	filedata = get_file_data_from_writer(writer)
+	filedata = pdf.get_file_data_from_writer(writer)
 
 	return filedata
 
@@ -86,3 +86,5 @@ def sign_pdf(input_pdf_io, pem_file, key_file, options=None):
 
     # Return signed PDF as bytes
     return output_pdf_io.getvalue()
+
+pdf.get_pdf = signed_get_pdf
