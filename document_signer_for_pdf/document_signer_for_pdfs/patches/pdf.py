@@ -1,22 +1,33 @@
 import frappe
+import io
 import pdfkit
+
+from distutils.version import LooseVersion
 
 from PyPDF2 import PdfReader, PdfWriter
 from pyhanko.sign import signers
+from frappe.utils import scrub_urls
 from pyhanko.sign.fields import SigFieldSpec, FieldMDPSpec, FieldMDPAction
 from pyhanko.sign.general import load_cert_from_pemder, load_private_key_from_pemder
 from pyhanko.pdf_utils.incremental_writer import IncrementalPdfFileWriter
 
 from frappe.utils import pdf
 
+PDF_CONTENT_ERRORS = [
+	"ContentNotFoundError",
+	"ContentOperationNotPermittedError",
+	"UnknownContentError",
+	"RemoteHostClosedError",
+]
+
 def signed_get_pdf(html, options=None, output: PdfWriter | None = None):
 	html = scrub_urls(html)
-	html, options = prepare_options(html, options)
+	html, options = pdf.prepare_options(html, options)
 
 	options.update({"disable-javascript": "", "disable-local-file-access": ""})
 
 	filedata = ""
-	if LooseVersion(get_wkhtmltopdf_version()) > LooseVersion("0.12.3"):
+	if LooseVersion(pdf.get_wkhtmltopdf_version()) > LooseVersion("0.12.3"):
 		options.update({"disable-smart-shrinking": ""})
 
 	try:
@@ -52,7 +63,12 @@ def signed_get_pdf(html, options=None, output: PdfWriter | None = None):
 	if "password" in options:
 		writer.encrypt(password)
 
-	filedata = pdf.get_file_data_from_writer(writer)
+	print("Digital Signature")
+	print(frappe.conf.signature_pem_file, frappe.conf.signature_key_file)
+	if frappe.conf.signature_pem_file and frappe.conf.signature_key_file:
+		filedata = sign_pdf(io.BytesIO(filedata), pem_file=frappe.conf.signature_pem_file, key_file=frappe.conf.signature_key_file)
+	else:
+		filedata = pdf.get_file_data_from_writer(writer)
 
 	return filedata
 
