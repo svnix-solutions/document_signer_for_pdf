@@ -63,24 +63,40 @@ def signed_get_pdf(html, options=None, output: PdfWriter | None = None):
 	if "password" in options:
 		writer.encrypt(password)
 
-	print("Digital Signature")
-	print(frappe.conf.signature_pem_file, frappe.conf.signature_key_file)
 	if frappe.conf.signature_pem_file and frappe.conf.signature_key_file:
-		filedata = sign_pdf(io.BytesIO(filedata), pem_file=frappe.conf.signature_pem_file, key_file=frappe.conf.signature_key_file)
+		filedata = sign_pdf(
+			io.BytesIO(filedata), 
+			pem_file=frappe.conf.signature_pem_file, 
+			key_file=frappe.conf.signature_key_file, 
+			ca_chain_files=frappe.conf.signature_ca_chain_files, 
+			options=options
+		)
 	else:
 		filedata = pdf.get_file_data_from_writer(writer)
 
 	return filedata
 
-def sign_pdf(input_pdf_io, pem_file, key_file, options=None):
+def sign_pdf(input_pdf_io, pem_file, key_file, ca_chain_files, options=None):
     # Load the certificate and private key
     with open(pem_file, 'rb') as cert_file:
         cert = load_cert_from_pemder(pem_file)
     with open(key_file, 'rb') as k_file:
         key = load_private_key_from_pemder(key_file, passphrase=None)
 
-    # Create a signer object
-    signer = signers.SimpleSigner(signing_cert=cert, signing_key=key, cert_registry=None)
+	# Load CA chain if provided
+    ca_chain = []
+    if ca_chain_files:
+        try:
+            for ca_file in ca_chain_files:
+                with open(ca_file, 'rb') as chain_file:
+                    ca_chain.append(load_cert_from_pemder(ca_file))
+            if len(ca_chain) == 0:
+                raise ValueError("No CA chain certificates found in the provided CA chain files")
+        except Exception as e:
+            raise ValueError(f"Error loading CA chain: {e}")
+	
+	# Create a signer object
+    signer = signers.SimpleSigner(signing_cert=cert, signing_key=key, cert_registry=ca_chain)
 
     # Create an IncrementalPdfFileWriter for the input PDF
     input_pdf_io.seek(0)
@@ -93,9 +109,8 @@ def sign_pdf(input_pdf_io, pem_file, key_file, options=None):
 
     output_pdf_io = io.BytesIO()
 
-    # @TODO: encrypt if password is there
-    # if "password" in options:
-	# 	pdf_writer.encrypt(password)
+    if "password" in options:
+        pdf_writer.encrypt(options["password"])
 
     # Sign the PDF
     signers.sign_pdf(pdf_writer, signature_meta, signer, output=output_pdf_io)
