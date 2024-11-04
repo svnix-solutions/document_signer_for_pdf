@@ -6,11 +6,11 @@ Document Signer for PDF is a robust digital signing solution designed to streaml
 add these to site_config.json, mind your parameters
 ```
 "signature_key_file": "/workspace/development/frappe-bench/certs/key.pem",
- "signature_pem_file": "/workspace/development/frappe-bench/certs/file.pem",
- "signature_ca_chain_files": [
-    "/workspace/development/frappe-bench/certs/chain/cert1.pem",
-    "/workspace/development/frappe-bench/certs/chain/cert2.pem",
-    "/workspace/development/frappe-bench/certs/chain/cert3.pem"
+"signature_pem_file": "/workspace/development/frappe-bench/certs/file.pem",
+"signature_ca_chain_files": [
+  "/workspace/development/frappe-bench/certs/chain/cert1.pem",
+  "/workspace/development/frappe-bench/certs/chain/cert2.pem",
+  "/workspace/development/frappe-bench/certs/chain/cert3.pem"
 ],
 ```
 
