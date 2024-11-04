@@ -4,15 +4,8 @@ include *.json
 include *.md
 include *.py
 include *.txt
-recursive-include document_signer_for_pdf *.css
-recursive-include document_signer_for_pdf *.csv
-recursive-include document_signer_for_pdf *.html
-recursive-include document_signer_for_pdf *.ico
-recursive-include document_signer_for_pdf *.js
 recursive-include document_signer_for_pdf *.json
 recursive-include document_signer_for_pdf *.md
-recursive-include document_signer_for_pdf *.png
 recursive-include document_signer_for_pdf *.py
-recursive-include document_signer_for_pdf *.svg
 recursive-include document_signer_for_pdf *.txt
 recursive-exclude document_signer_for_pdf *.pyc
