@@ -1,5 +1,7 @@
 from . import __version__ as app_version
 
+from document_signer_for_pdf.document_signer_for_pdfs.patches import pdf
+
 app_name = "document_signer_for_pdf"
 app_title = "Document Signer for PDFs"
 app_publisher = "SVNIX Solutions"
