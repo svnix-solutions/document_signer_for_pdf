@@ -1,1 +1,0 @@
-from document_signer_for_pdf.document_signer_for_pdfs.patches import pdf
