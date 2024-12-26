@@ -66,10 +66,12 @@ def signed_get_pdf(html, options=None, output: PdfWriter | None = None):
 
     if frappe.conf.signature_pem_file and frappe.conf.signature_key_file:
         filedata = sign_pdf(
-            io.BytesIO(filedata), 
-            pem_file=frappe.conf.signature_pem_file, 
-            key_file=frappe.conf.signature_key_file, 
-            ca_chain_files=frappe.conf.signature_ca_chain_files, 
+            io.BytesIO(filedata),
+            pem_file=frappe.conf.signature_pem_file,
+            key_file=frappe.conf.signature_key_file,
+            ca_chain_files=frappe.conf.signature_ca_chain_files,
+            signature_box=frappe.conf.signature_box,
+            signed_by = frappe.conf.signed_by,
             options=options
         )
     else:
@@ -77,7 +79,7 @@ def signed_get_pdf(html, options=None, output: PdfWriter | None = None):
 
     return filedata
 
-def sign_pdf(input_pdf_io, pem_file, key_file, ca_chain_files=None, options=None):
+def sign_pdf(input_pdf_io, pem_file, key_file, ca_chain_files=None, signature_box=None, signed_by = None, options=None):
     # Load the certificate and private key
     with open(pem_file, 'rb') as cert_file:
         cert = load_cert_from_pemder(pem_file)
@@ -95,7 +97,7 @@ def sign_pdf(input_pdf_io, pem_file, key_file, ca_chain_files=None, options=None
                 raise ValueError("No CA chain certificates found in the provided CA chain files")
         except Exception as e:
             raise ValueError(f"Error loading CA chain: {e}")
-    
+
     # Create a signer object
     signer = signers.SimpleSigner(signing_cert=cert, signing_key=key, cert_registry=ca_chain)
 
@@ -111,14 +113,14 @@ def sign_pdf(input_pdf_io, pem_file, key_file, ca_chain_files=None, options=None
     pdf_signer = signers.PdfSigner(
         signature_meta, signer=signer, stamp_style=stamp.QRStampStyle(
             # Let's include the URL in the stamp text as well
-            stamp_text='Signed by: %(signer)s\nTime: %(ts)s\nURL: %(url)s',
+            stamp_text='Signed by: '+ signed_by+'\nFor: %(signer)s\nTime: %(ts)s\nURL: %(url)s',
         ),
     )
 
     sig_field_spec = SigFieldSpec(
-        sig_field_name='Signature1', 
+        sig_field_name='Signature1',
         doc_mdp_update_value=MDPPerm.NO_CHANGES,
-        box=(300, 200, 466, 250)
+        box=(signature_box)
     )
 
     # Append the signature field to the PDF
